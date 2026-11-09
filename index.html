@@ -29,7 +29,7 @@
 
     .kartu {
         max-width: 360px;
-        margin: 20px auto;
+        margin: 20px auto 20px;
         padding: 28px;
         background-color: #eef3ff;
         border: 2px solid #8aaaf0;
@@ -133,9 +133,26 @@
         border-color: #608BE0;
      }
 
+     .kotak-grafik {
+        display: none;
+        position:relative;
+        width: 60%;
+        height: 320px;
+        margin: 24px auto;
+        padding: 16px;
+        box-sizing: border-box;
+        background-color: #eef3ff;
+        border: 2px solid #8aaaf0;
+        border-radius: 8px;
+     }
+
      @media (max-width: 600px) {
     h1 {
         font-size: 28px;
+    }
+
+    .kotak-grafik {
+        width: 95%;
     }
 
     .gambar-baris img {
@@ -186,13 +203,17 @@
         <button id="tombol">Hitung</button>
     </div>
 
-    <div style="overflow-x: auto;">
+    <div style="overflow-x: auto; margin: 20px 0;">
     <table id="tabelHasil">
         <thead>
             <tr><th>Bulan</th><th>Pokok</th><th>Bunga</th><th>Anuitas</th><th>Sisa</th></tr>
         </thead>
         <tbody id="isiTabel"></tbody>
     </table>
+    </div>
+
+    <div id="kotakGrafik" class="kotak-grafik">
+        <canvas id="grafik"></canvas>
     </div>
 
     </div>
@@ -209,7 +230,33 @@
     <p> XI-3 </p>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
     <script>
+        let grafik;
+
+        function gambarGrafik(labels, pokokList, bungaList) {
+            if (grafik) grafik.destroy();
+            grafik = new Chart(document.getElementById("grafik"), {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: "Pokok", data: pokokList, backgroundColor: "#2f6fed" },
+                        { label: "Bunga", data: bungaList, backgroundColor: "#f0b429" }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true, title: { display: true, text: "Bulan" } },
+                        y: { stacked: true, title: { display: true, text: "Rupiah" } }
+                    }
+                }
+            });
+        }
+
+
         function rupiah(angka) {
                 return "Rp" + Math.round(angka).toLocaleString("id-ID", {
                     minimumFractionDigits: 2,
@@ -238,11 +285,19 @@
 
             let sisa = P;
             let baris = "";
+            const labels = [];
+            const pokokList = [];
+            const bungaList = [];
 
             for (let bulan = 1; bulan <= n; bulan++) {
                 const bungaBulanIni = sisa * r;
                 const pokok = A - bungaBulanIni;
-                sisa = sisa - pokok;
+                sisa = Math.max(0, sisa - pokok);
+
+                labels.push(bulan);
+                pokokList.push(Math.round(pokok));
+                bungaList.push(Math.round(bungaBulanIni));
+
 
                 baris += "<tr><td>" + bulan + "</td><td>" + rupiah(pokok) +
                          "</td><td>" + rupiah(bungaBulanIni) +
@@ -252,6 +307,8 @@
 
             document.getElementById("isiTabel").innerHTML = baris;
             document.getElementById("tabelHasil").style.display = "table";
+            document.getElementById("kotakGrafik").style.display = "block";
+            gambarGrafik(labels, pokokList, bungaList);
         });
     </script>
 </body>
